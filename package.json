@@ -6,6 +6,6 @@
   "scripts": {
     "start": "node server.mjs",
     "test": "node --test",
-    "check": "node --check src/captions.mjs && node --check src/app.mjs && node --test"
+    "check": "node --check captions.mjs && node --check app.mjs && node --test"
   }
 }
