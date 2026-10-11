@@ -31,6 +31,7 @@ export function parseSrt(text) {
 export function analyze(cues, { maxChars = 42, minCps = 4, maxCps = 20, maxLines = 2 } = {}) {
   const findings = [];
   const ordered = [...cues].sort((a, b) => a.start - b.start || a.end - b.end);
+  let furthestEndingCue = null;
   for (let i = 0; i < ordered.length; i++) {
     const cue = ordered[i]; const lines = cue.text.split('\n');
     const chars = [...cue.text.replace(/\s/g, '')].length;
@@ -40,7 +41,10 @@ export function analyze(cues, { maxChars = 42, minCps = 4, maxCps = 20, maxLines
     if (lines.length > maxLines) findings.push({ id: cue.id, code: 'many-lines', level: 'warning', message: `Больше ${maxLines} строк` });
     if (cps > maxCps) findings.push({ id: cue.id, code: 'fast', level: 'warning', message: `Скорость чтения ${cps.toFixed(1)} симв./с` });
     if (cps > 0 && cps < minCps) findings.push({ id: cue.id, code: 'slow', level: 'notice', message: `Низкая плотность текста: ${cps.toFixed(1)} симв./с` });
-    if (i > 0 && cue.start < ordered[i - 1].end) findings.push({ id: cue.id, code: 'overlap', level: 'error', message: `Пересечение с репликой ${ordered[i - 1].id}` });
+    if (furthestEndingCue && cue.start < furthestEndingCue.end) {
+      findings.push({ id: cue.id, code: 'overlap', level: 'error', message: `Пересечение с репликой ${furthestEndingCue.id}` });
+    }
+    if (!furthestEndingCue || cue.end > furthestEndingCue.end) furthestEndingCue = cue;
   }
   return findings;
 }

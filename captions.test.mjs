@@ -27,3 +27,14 @@ test('analysis reports long lines, high reading speed, overlap and empty cues', 
   const codes = analyze(cues).map(f => f.code);
   assert.ok(codes.includes('long-line')); assert.ok(codes.includes('fast')); assert.ok(codes.includes('overlap')); assert.ok(codes.includes('empty'));
 });
+
+test('analysis detects overlaps with an earlier long cue after a shorter nested cue', () => {
+  const cues = [
+    { id: 'outer', start: 0, end: 10000, text: 'Long cue' },
+    { id: 'nested', start: 1000, end: 2000, text: 'Short cue' },
+    { id: 'later-nested', start: 3000, end: 4000, text: 'Another cue' }
+  ];
+  const finding = analyze(cues).find(item => item.id === 'later-nested' && item.code === 'overlap');
+  assert.ok(finding);
+  assert.match(finding.message, /outer/);
+});
