@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.1.3 - 2026-10-11
+
+- Add a real screenshot of the app (demo data view) to the README.
+
+
 ## 0.1.2 - 2026-10-11
 
 - Complete the standard MIT license text, restoring the full warranty and liability disclaimer.
