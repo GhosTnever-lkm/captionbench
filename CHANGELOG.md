@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.1.4 - 2026-10-24
+
+- Preserve the caret and selection while editing subtitle text in the cue list.
+
 ## 0.1.3 - 2026-10-11
 
 - Add a real screenshot of the app (demo data view) to the README.

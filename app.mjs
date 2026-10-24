@@ -9,6 +9,7 @@ function render() {
   const findings = analyze(cues, rules); const byId = new Map();
   for (const item of findings) { const list = byId.get(item.id) ?? []; list.push(item); byId.set(item.id, list); }
   const filter = $('filter-select').value;
+  const cueIndices = new Map(cues.map((cue, index) => [cue, index]));
   const visible = cues.filter(cue => filter === 'all' || (filter === 'issues' ? byId.has(cue.id) : !byId.has(cue.id)));
   $('stat-cues').textContent = cues.length;
   $('stat-issues').textContent = findings.length;
@@ -20,6 +21,7 @@ function render() {
   $('cue-list').hidden = cues.length === 0;
   $('export-button').disabled = cues.length === 0;
   $('cue-list').replaceChildren(...visible.map((cue, idx) => {
+    const cueIndex = cueIndices.get(cue);
     const row = document.createElement('article'); row.className = 'cue';
     const time = document.createElement('div'); time.className = 'cue-time';
     const number = document.createElement('b'); number.textContent = `#${String(idx + 1).padStart(2, '0')}`;
@@ -31,8 +33,22 @@ function render() {
     const issueList = document.createElement('div'); issueList.className = 'issue-list';
     for (const issue of byId.get(cue.id) ?? []) { const badge = document.createElement('span'); badge.className = `issue ${issue.level}`; badge.textContent = issue.message; issueList.append(badge); }
     head.append(label, issueList);
-    const input = document.createElement('textarea'); input.value = cue.text; input.setAttribute('aria-label', `Текст реплики ${idx + 1}`); input.rows = Math.max(2, Math.min(5, cue.text.split('\n').length + 1));
-    input.addEventListener('input', () => { cue.text = input.value; render(); const next = [...document.querySelectorAll('.cue textarea')].find(el => el.value === cue.text); next?.focus(); next?.setSelectionRange(next.value.length, next.value.length); });
+    const input = document.createElement('textarea'); input.value = cue.text; input.dataset.cueIndex = String(cueIndex); input.setAttribute('aria-label', `Текст реплики ${idx + 1}`); input.rows = Math.max(2, Math.min(5, cue.text.split('\n').length + 1));
+    input.addEventListener('input', () => {
+      const selectionStart = input.selectionStart;
+      const selectionEnd = input.selectionEnd;
+      const selectionDirection = input.selectionDirection ?? 'none';
+      cue.text = input.value;
+      render();
+      const next = document.querySelector(`.cue textarea[data-cue-index="${cueIndex}"]`);
+      if (!next) return;
+      next.focus();
+      next.setSelectionRange(
+        Math.min(selectionStart, next.value.length),
+        Math.min(selectionEnd, next.value.length),
+        selectionDirection,
+      );
+    });
     const chars = [...cue.text.replace(/\s/g, '')].length; const cps = chars / ((cue.end - cue.start) / 1000);
     const meta = document.createElement('div'); meta.className = 'cue-stats';
     const count = document.createElement('span'); count.textContent = `${chars} знаков`;
