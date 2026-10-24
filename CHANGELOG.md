@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.1.5 - 2026-10-24
+
+- Clear an over-limit file selection so the same file can be selected again after retrying.
+
 ## 0.1.4 - 2026-10-24
 
 - Preserve the caret and selection while editing subtitle text in the cue list.

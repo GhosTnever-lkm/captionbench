@@ -1,6 +1,29 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
+import { readFile } from 'node:fs/promises';
 import { analyze, formatTimestamp, parseSrt, parseTimestamp, toSrt } from './captions.mjs';
+import { MAX_SUBTITLE_FILE_BYTES, rejectOversizedFile } from './file-policy.mjs';
+
+test('package, release metadata, and packaged runtime files stay synchronized', async () => {
+  const packageJson = JSON.parse(await readFile(new URL('./package.json', import.meta.url), 'utf8'));
+  const version = (await readFile(new URL('./VERSION', import.meta.url), 'utf8')).trim();
+  const changelog = (await readFile(new URL('./CHANGELOG.md', import.meta.url), 'utf8')).replace(/\r\n/g, '\n');
+  const workflow = await readFile(new URL('./.github/workflows/release.yml', import.meta.url), 'utf8');
+  assert.equal(packageJson.version, version);
+  assert.ok(changelog.startsWith(`# Changelog\n\n## ${version} - `));
+  for (const file of ['index.html', 'app.mjs', 'captions.mjs', 'file-policy.mjs', 'styles.css', 'icon.svg', 'README.md', 'LICENSE', 'VERSION', 'docs/screenshot.png']) {
+    assert.ok(workflow.includes(file), `release archive must include ${file}`);
+  }
+});
+
+test('oversized file rejection resets the input so the user can retry', () => {
+  const input = { value: 'C:\\fakepath\\too-large.srt' };
+  assert.equal(rejectOversizedFile({ size: MAX_SUBTITLE_FILE_BYTES + 1 }, input), true);
+  assert.equal(input.value, '');
+  input.value = 'C:\\fakepath\\within-limit.srt';
+  assert.equal(rejectOversizedFile({ size: MAX_SUBTITLE_FILE_BYTES }, input), false);
+  assert.equal(input.value, 'C:\\fakepath\\within-limit.srt');
+});
 
 test('SRT parser accepts BOM, CRLF and comma/dot millisecond separators', () => {
   const cues = parseSrt('\uFEFF1\r\n00:00:01,250 --> 00:00:02.500\r\nHello\r\nworld');
