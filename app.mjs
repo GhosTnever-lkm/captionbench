@@ -1,4 +1,5 @@
 import { analyze, formatTimestamp, parseSrt, toSrt } from './captions.mjs';
+import { rejectOversizedFile } from './file-policy.mjs';
 
 const $ = id => document.getElementById(id);
 const sample = `1\n00:00:01,000 --> 00:00:03,100\nДобро пожаловать в CaptionBench.\n\n2\n00:00:03,000 --> 00:00:04,000\nЭта реплика специально слишком быстрая для чтения.\n\n3\n00:00:04,300 --> 00:00:07,000\nИсправь текст прямо здесь —\nи сохрани обновлённый SRT.`;
@@ -62,7 +63,7 @@ function download() { if (!cues.length) return; const blob = new Blob([toSrt(cue
 
 async function openFile(file) {
   if (!file) return;
-  if (file.size > 25 * 1024 * 1024) { showToast('Файл больше лимита 25 МБ.'); return; }
+  if (rejectOversizedFile(file, $('file-input'))) { showToast('Файл больше лимита 25 МБ.'); return; }
   try { const parsed = parseSrt(await file.text()); cues = parsed; fileName = file.name; $('file-size').textContent = `${(file.size / 1024).toFixed(1)} КБ · локально`; render(); showToast(`Загружено реплик: ${parsed.length}`); }
   catch (error) { showToast(error.message); }
   $('file-input').value = '';

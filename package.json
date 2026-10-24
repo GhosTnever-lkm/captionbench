@@ -1,11 +1,11 @@
 {
   "name": "captionbench",
-  "version": "0.1.4",
+  "version": "0.1.5",
   "private": true,
   "type": "module",
   "scripts": {
     "start": "node server.mjs",
     "test": "node --test",
-    "check": "node --check captions.mjs && node --check app.mjs && node --test"
+    "check": "node --check captions.mjs && node --check file-policy.mjs && node --check app.mjs && node --test"
   }
 }

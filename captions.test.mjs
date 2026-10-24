@@ -1,6 +1,16 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { analyze, formatTimestamp, parseSrt, parseTimestamp, toSrt } from './captions.mjs';
+import { MAX_SUBTITLE_FILE_BYTES, rejectOversizedFile } from './file-policy.mjs';
+
+test('oversized file rejection resets the input so the user can retry', () => {
+  const input = { value: 'C:\\fakepath\\too-large.srt' };
+  assert.equal(rejectOversizedFile({ size: MAX_SUBTITLE_FILE_BYTES + 1 }, input), true);
+  assert.equal(input.value, '');
+  input.value = 'C:\\fakepath\\within-limit.srt';
+  assert.equal(rejectOversizedFile({ size: MAX_SUBTITLE_FILE_BYTES }, input), false);
+  assert.equal(input.value, 'C:\\fakepath\\within-limit.srt');
+});
 
 test('SRT parser accepts BOM, CRLF and comma/dot millisecond separators', () => {
   const cues = parseSrt('\uFEFF1\r\n00:00:01,250 --> 00:00:02.500\r\nHello\r\nworld');
